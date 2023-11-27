@@ -3,13 +3,21 @@ import sys
 import time
 
 accounts = []
-options = ["to add new account", "to deposit money to an existing account", "to withdraw money from an existing account", "to move money from an account to another", "to check balance of account", "to delete account", "to quit the program"]
+options = ["to add new account",
+           "to deposit money to an existing account",
+           "to withdraw money from an existing account",
+           "to move money from an account to another",
+           "to check balance of account",
+           "to check the changehistory of an existing account",
+           "to delete account",
+           "to quit the program"]
 
 class Account:
     def __init__(self, name, id, balance = 0):
         self._id = id
         self._name = name
         self._balance = balance
+        self._changehistory = []
 
     def __str__(self):
         return self._name
@@ -20,9 +28,16 @@ class Account:
     def withdraw(self, n):
         self._balance -= n
 
+    def add_changehistory(self, s):
+        self._changehistory.append(s)
+
     @property
     def balance(self):
         return self._balance
+
+    @property
+    def changehistory(self):
+        return self._changehistory
 
 def main():
     print("","Hello and welcome to Roem Central Bank, please follow the instructions below as in how to navigate the program", sep="\n")
@@ -45,10 +60,12 @@ def get_command():
         elif index == 3:
             call_move()
         elif index == 4:
-            check_balance()
+            check_balance(accounts)
         elif index == 5:
-            call_delete()
+            call_check_changehistory()
         elif index == 6:
+            call_delete()
+        elif index == 7:
             quit()
     except ValueError:
         print(index)
@@ -56,23 +73,21 @@ def get_command():
         get_command()
 
 def call_add():
-    wait_and_clear()
     id = len(accounts)
     account_name = input("Please input name of the new account: ")
     if account_name == "":
         return
     print(add(accounts, account_name, id))
-    time.sleep(1)
     wait_and_clear()
 
 def add(account_list, account_name, id):
     new_account = Account(account_name, id)
     account_list.append(new_account)
+    account_list[id].add_changehistory("Added account named " + account_name)
     return ("Succesfully added new account named " + account_name)
 
 def call_deposit():
     print(deposit(accounts))
-    time.sleep(1)
     wait_and_clear()
 
 def deposit(account_list = None, target_id = -1, set_amount = None):
@@ -93,11 +108,11 @@ def deposit(account_list = None, target_id = -1, set_amount = None):
     else:
         amount = set_amount
     account.deposit(amount)
+    account.add_changehistory("Deposited " + str(amount))
     return ("Deposited " + str(amount) + " to " + str(account))
 
 def call_withdraw():
     print(withdraw(accounts))
-    time.sleep(1)
     wait_and_clear()
 
 def withdraw(account_list = None, target_id = -1, set_amount = None):
@@ -122,12 +137,12 @@ def withdraw(account_list = None, target_id = -1, set_amount = None):
             return("Amount to withdraw exceeds account balance")
         else:
             amount = set_amount
+    account.add_changehistory("Withdrew " + str(amount))
     account.withdraw(amount)
     return ("Succesfully withdrew " + str(amount) + " from " + str(account))
 
 def call_move():
     print(move(accounts))
-    time.sleep(1)
     wait_and_clear()
 
 def move(account_list = None, from_id = -1, to_id = -1, set_amount = None):
@@ -162,14 +177,51 @@ def move(account_list = None, from_id = -1, to_id = -1, set_amount = None):
         if to_id >= len(account_list) or to_id < 0:
             return ("Target ID is not in account list")
         to_account = account_list[to_id]
+    from_account.changehistory.append("Moved " + str(amount) + " to " + str(to_account))
+    to_account.changehistory.append("Recevied " + str(amount) + " from " + str(from_account))
     from_account.withdraw(amount)
     to_account.deposit(amount)
     return ("Succesfully moved " + str(amount) + " from " + str(from_account) + " to " + str(to_account))
 
+def call_check_changehistory():
+    l = get_changehistory(accounts)
+    print("Changehistory: ")
+    for s in l:
+        print("  " + str(s))
+    wait_and_clear()
+
+def get_changehistory(account_list = None, target_id = -1):
+    if len(account_list) == 0:
+        print("No valid account found")
+        wait_and_clear()
+        return
+    if target_id == -1:
+        account = get_inputted_account(account_list, "Please input number of the account you want to check changehistory of: ")
+        if not account:
+            return ("Cancelled")
+    else:
+        account = account_list[target_id]
+
+    return(account.changehistory)
+
+def check_balance(account_list = None, target_id = -1):
+    if len(account_list) == 0:
+        print("No valid account found")
+        wait_and_clear()
+        return
+    if target_id == -1:
+        account = get_inputted_account(account_list, "Please input number of the account you want to check balance of: ")
+        if not account:
+            return ("Cancelled")
+    else:
+        account = account_list[target_id]
+
+    print("Balance:", account.balance)
+    wait_and_clear()
+
 def call_delete():
     if len(accounts) == 0:
         print("No valid account found")
-        time.sleep(1)
         wait_and_clear()
         return
     for i in range(len(accounts)):
@@ -186,11 +238,9 @@ def call_delete():
         except ValueError:
             print("Invalid input, please try again")
     print(delete(accounts, index))
-    time.sleep(2)
     wait_and_clear()
 
 def delete(account_list, index):
-    print(index, len(account_list))
     if index >= 0 and index < len(account_list):
         target = account_list[index]
         account_list.remove(target)
@@ -198,23 +248,10 @@ def delete(account_list, index):
     else:
         return("No valid account found")
 
-def check_balance(account_list = None, target_id = None):
-    if len(account_list) == 0:
-        print("No valid account found")
-        time.sleep(1)
-        wait_and_clear()
-        return
-    account = get_inputted_account(account_list)
-    return("Balance:", account.balance)
-
 #HELPERS
 
 def wait_and_clear():
-    for _ in range(3):
-        time.sleep(0.15)
-        sys.stdout.write('.')
-        sys.stdout.flush()
-    time.sleep(0.15)
+    input("Press any key to continue")
     if name == 'nt':
         x = system('cls')
     else:
