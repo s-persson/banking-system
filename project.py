@@ -1,6 +1,5 @@
 from os import system, name
 import sys
-import time
 
 accounts = []
 options = ["to add new account",
@@ -40,7 +39,7 @@ class Account:
         return self._changehistory
 
 def main():
-    print("","Hello and welcome to Roem Central Bank, please follow the instructions below as in how to navigate the program", sep="\n")
+    print("","Welcome to banking system, please follow the instructions below as in how to navigate the program", sep="\n")
     while True:
         get_command()
 
@@ -48,7 +47,7 @@ def get_command():
     print("","The commands that we offer are the following", sep="\n")
     for option_index in range(len(options)):
         print(str(option_index), options[option_index])
-    print("Keep in mind that if you ever want to cancel an command simply press the enter button when prompted for input to cancel the command")
+    print("To cancel an command simply press the 'Enter' button when prompted for input")
     try:
         index = int(input("Please choose an command: "))
         if index == 0:
@@ -68,8 +67,8 @@ def get_command():
         elif index == 7:
             quit()
     except ValueError:
-        print(index)
         print("Invalid input, please try again")
+        wait_and_clear()
         get_command()
 
 def call_add():
@@ -128,7 +127,7 @@ def withdraw(account_list = None, target_id = -1, set_amount = None):
         account = account_list[target_id]
     if not set_amount:
         amount = -1
-        while amount < 0 or amount >= account.balance:
+        while amount < 0 or amount > account.balance:
             amount = get_inputted_value("Please input the amount you want to withdraw: ", "Balance: " + str(account.balance))
             if not amount:
                 return("Cancelled")
@@ -159,7 +158,7 @@ def move(account_list = None, from_id = -1, to_id = -1, set_amount = None):
         from_account = account_list[from_id]
     if not set_amount:
         amount = -1
-        while amount < 0 or amount >= from_account.balance:
+        while amount < 0 or amount > from_account.balance:
             amount = get_inputted_value("Please input the amount you want to withdraw: ", "Balance: " + str(from_account.balance))
             if not amount:
                 return("Cancelled")
@@ -251,7 +250,7 @@ def delete(account_list, index):
 #HELPERS
 
 def wait_and_clear():
-    input("Press any key to continue")
+    input("Press any key to continue ")
     if name == 'nt':
         x = system('cls')
     else:
@@ -283,7 +282,7 @@ def get_inputted_value(input_text, printed_text = None):
 
 #----------------------------------------------------
 def quit():
-    sys.exit("Thank you for using Roem Central Bank")
+    sys.exit("Thank you for using this banking system")
 
 if __name__ == "__main__":
     main()
